@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='toml_config',
-    version='0.10',
+    version='0.11',
     packages=['toml_config'],
     install_requires=['toml',],
     url='https://github.com/SemenovAV/toml_config',

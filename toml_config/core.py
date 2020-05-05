@@ -45,9 +45,16 @@ class Config:
         :param section_name: Название секции.
 
         """
+
         if self.state:
-            self.active_section = section_name
-            self.section = self.config.get(self.active_section)
+            section = self.config.get(self.active_section)
+            if section:
+                self.active_section = section_name
+                self.section = section
+            else:
+                self.state = False
+                self.e = f'not section: {section_name}'
+
         return self
 
     def load(self) -> 'Config':
