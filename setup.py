@@ -4,6 +4,7 @@ setup(
     name='toml_config',
     version='0.10',
     packages=['toml_config'],
+    install_requires=['toml',],
     url='https://github.com/SemenovAV/toml_config',
     license='MIT',
     author='SemenovAV',
