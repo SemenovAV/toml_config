@@ -97,7 +97,12 @@ class Config:
         :return:
         """
         if self.state:
-            self.value = self.section.get(param)
+            value = self.section.get(param)
+            if value:
+                self.value = self.section.get(param)
+            else:
+                self.state = False
+                self.e = f'not key: {param} from section{self.active_section}'
             return self
 
     def set(self, params: dict) -> 'Config':
