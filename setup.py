@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='toml_config',
-    version='0.1.2',
+    version='0.1.3',
     packages=['toml_config'],
     install_requires=['toml',],
     url='https://github.com/SemenovAV/toml_config',
