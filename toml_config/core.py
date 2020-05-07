@@ -1,3 +1,30 @@
+"""
+Module for easy work with configuration files in toml format.
+
+To get started, import the module. Create an instance of the Config class
+by passing as a parameter the path to an existing file or the path where this file
+will be created.And then you can read parameters
+from the file and write parameters to the file.
+
+Example.
+Creating a file and writing values.
+
+main.py:
+---------------------------------------
+from toml_config.core import Config
+
+my_config = Config('app.config.toml')
+my_config.add_section('app').set(key=value,other_key=[1,2,3])
+--------------------------------------
+
+app.config.toml:
+--------------------------------------
+[app]
+key = "value"
+other_key = [ 1, 2, 3,]
+--------------------------------------
+"""
+
 import os
 from typing import Callable
 
@@ -15,13 +42,12 @@ class Config:
 
         :param path: Путь к файлу
         """
-        self.default_section = 'default'
         self.path = path
         self.config = {}
         self.section = {}
         self.value = None
-        self.active_section = self.default_section
-        self.e = None
+        self.active_section = 'default'
+        self.err = None
         self.state = True
         self.load()
 
@@ -30,100 +56,112 @@ class Config:
 
     def add_section(self, section_name: str) -> 'Config':
         """
-        Метод добавляет секцию в файл.
-        :param section_name: Название секции.
+        The method adds a section to the file.
+        :param section_name: str
 
         """
         if self.state:
-            self.config[section_name] = {}
-            self.get_section(section_name)
+            if not self.config.get(section_name):
+                self.config[section_name] = {}
+                self.get_section(section_name)
+                self.save()
         return self
 
     def get_section(self, section_name: str) -> 'Config':
         """
-        Метод делает секцию активной.
-        :param section_name: Название секции.
+        This method makes the section active.
+        :param section_name: str
 
         """
 
         if self.state:
-            section = self.config.get(self.active_section)
-            if section:
+            section = self.config.get(section_name)
+            if isinstance(section, dict):
                 self.active_section = section_name
                 self.section = section
             else:
                 self.state = False
-                self.e = f'not section: {section_name}'
+                self.err = f'not section: {section_name}'
 
         return self
 
     def load(self) -> 'Config':
         """
-        Метод загружает в self.config содержимое файла.
-        Если файл отсутствует - создает новый файл по пути self.path
-        Путь к файлу получен при инициализации, параметр - path.
+        The method loads the contents of the file to self.config property".
+        If the file is missing, it creates a new file along the path specified
+        in the self.path property.The path to the file was obtained during
+        initialization in the path parameter.
 
         """
         if self.state:
             try:
                 if not os.path.exists(self.path):
-                    with open(self.path, 'w', encoding='utf8') as f:
-                        toml.dump(self.config, f)
-                with open(self.path, encoding='utf8', ) as f:
-                    self.config = toml.load(f)
+                    with open(self.path, 'w', encoding='utf8') as file:
+                        toml.dump(self.config, file)
+                with open(self.path, encoding='utf8', ) as file:
+                    self.config = toml.load(file)
                     return self
-            except Exception as e:
+            except OSError as err:
                 self.state = False
-                self.e = e
+                self.err = err
+            except TypeError as err:
+                self.state = False
+                self.err = err
+        return self
 
     def save(self) -> 'Config':
         """
-        Метод сохраняет в файл содержимое self.config
-        :return: Если все прошло без ошибок - True
+       The method saves the contents of the self.config property to a file
+
         """
         if self.state:
             try:
-                with open(self.path, 'w', encoding='utf8') as f:
-                    toml.dump(self.config, f)
+                with open(self.path, 'w', encoding='utf8') as file:
+                    toml.dump(self.config, file)
                     return self
-            except Exception as e:
+            except OSError as err:
                 self.state = False
-                self.e = e
+                self.err = err
+            except TypeError as err:
+                self.state = False
+                self.err = err
+        return self
 
     def get(self, param: str) -> 'Config':
         """
-        Метод получает значение параметра из активнгой секции
-        :param param:
-        :return:
+        The method gets the parameter value from the active section
+        :param param: str Parameter name.
+
         """
         if self.state:
-            value = self.section.get(param)
-            if value:
+            value = self.section.get(param, )
+            if value is not None:
                 self.value = self.section.get(param)
             else:
                 self.state = False
-                self.e = f'not key: {param} from section{self.active_section}'
-            return self
+                self.err = f'not key: {param} from section{self.active_section}'
+        return self
 
-    def set(self, params: dict) -> 'Config':
+    def set(self, **kwargs) -> 'Config':
         """
-        Записывает параметры в активную секцию.
-        :param params: Словарь параметров.
-        :return:
+        Writes parameters to the active section.
+        :param kwargs: Parameters.
+
         """
         if self.state:
             if isinstance(self.section, dict):
-                for key, value in params.items():
+                for key, value in kwargs.items():
                     self.section.setdefault(key, value)
                 self.save()
-            return self
+        return self
 
     def catch(self, callback: Callable) -> 'Config':
         """
-        Метод вызывается в случае ошибки в одном
-        из методов стоящих в цепрочке перед ним.
-        :param callback: Функция.
-        :return:
+        The method is called if there is an error in one
+        of the methods in front of him.
+
+        :param callback: Function.
+
         """
         if self.state is False:
             callback(self)
