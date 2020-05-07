@@ -131,7 +131,7 @@ class Config:
         if self.state:
             if isinstance(self.section, dict):
                 for key, value in kwargs.items():
-                    self.section.setdefault(key, value)
+                    self.section[key] = value
                 self.save()
         return self
 
