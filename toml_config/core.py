@@ -134,6 +134,17 @@ class Config:
                     self.section[key] = value
                 self.save()
         return self
+    
+    def update(self, param: str, value: str):
+        """
+        Writes parameter to the section where the parameter is located.
+        :param param: str Parameter name.
+        :param value: str Parameter new value.
+        """
+        for section, data in self.config.items():
+            if param in list(data.keys()):
+                self.get_section(section)
+                self.set(**{param: value})
 
     def catch(self, callback: Callable) -> 'Config':
         """
